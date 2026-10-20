@@ -1,0 +1,118 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: selaras
+  labels:
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/part-of: selaras-simrs
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 10s
+      evaluation_interval: 10s
+      scrape_timeout: 5s
+
+    scrape_configs:
+      - job_name: "prometheus"
+        static_configs:
+          - targets: ["localhost:9090"]
+
+      # Kubernetes Pods Auto-Discovery
+      - job_name: "kubernetes-pods"
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              names:
+                - selaras
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+            action: keep
+            regex: true
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+            action: replace
+            target_label: __metrics_path__
+            regex: (.+)
+          - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+            action: replace
+            regex: ([^:]+)(?::\d+)?;(\d+)
+            replacement: $1:$2
+            target_label: __address__
+          - action: labelmap
+            regex: __meta_kubernetes_pod_label_(.+)
+          - source_labels: [__meta_kubernetes_namespace]
+            action: replace
+            target_label: kubernetes_namespace
+          - source_labels: [__meta_kubernetes_pod_name]
+            action: replace
+            target_label: kubernetes_pod_name
+
+      # Direct Static Scrapes (Fallback for ClusterIPs)
+      - job_name: "selaras-gateways"
+        metrics_path: "/metrics"
+        static_configs:
+          - targets: ["bff-web:9090"]
+            labels:
+              service: "bff-web"
+              layer: "gateway"
+          - targets: ["bff-mobile:9091"]
+            labels:
+              service: "bff-mobile"
+              layer: "gateway"
+          - targets: ["b2b-gateway:9092"]
+            labels:
+              service: "b2b-gateway"
+              layer: "gateway"
+
+      - job_name: "selaras-core-services"
+        metrics_path: "/metrics"
+        static_configs:
+          - targets: ["patient-service:9092"]
+            labels:
+              service: "patient-service"
+          - targets: ["emr-service:9093"]
+            labels:
+              service: "emr-service"
+          - targets: ["master-service:9094"]
+            labels:
+              service: "master-service"
+          - targets: ["bed-service:9095"]
+            labels:
+              service: "bed-service"
+          - targets: ["admission-service:9096"]
+            labels:
+              service: "admission-service"
+          - targets: ["practitioner-service:9097"]
+            labels:
+              service: "practitioner-service"
+          - targets: ["auth-service:9098"]
+            labels:
+              service: "auth-service"
+          - targets: ["billing-service:9099"]
+            labels:
+              service: "billing-service"
+          - targets: ["pharmacy-service:9100"]
+            labels:
+              service: "pharmacy-service"
+          - targets: ["laboratory-service:9101"]
+            labels:
+              service: "laboratory-service"
+          - targets: ["radiology-service:9102"]
+            labels:
+              service: "radiology-service"
+          - targets: ["document-service:9103"]
+            labels:
+              service: "document-service"
+
+      - job_name: "selaras-workers"
+        metrics_path: "/metrics"
+        static_configs:
+          - targets: ["satusehat-worker:9095"]
+            labels:
+              service: "satusehat-worker"
+          - targets: ["bpjs-worker:9096"]
+            labels:
+              service: "bpjs-worker"
+          - targets: ["notification-worker:9097"]
+            labels:
+              service: "notification-worker"

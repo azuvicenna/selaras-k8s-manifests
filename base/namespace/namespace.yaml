@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: selaras
+  labels:
+    app.kubernetes.io/name: selaras
+    app.kubernetes.io/part-of: selaras-simrs

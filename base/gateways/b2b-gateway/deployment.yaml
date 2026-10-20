@@ -1,0 +1,148 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: b2b-gateway
+  namespace: selaras
+  labels:
+    app.kubernetes.io/name: b2b-gateway
+    app.kubernetes.io/component: gateway
+    app.kubernetes.io/part-of: selaras-simrs
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: b2b-gateway
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: b2b-gateway
+        app.kubernetes.io/component: gateway
+        app.kubernetes.io/part-of: selaras-simrs
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9092"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: b2b-gateway
+          image: azuvicenna/selaras-b2b-gateway:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8082
+            - name: metrics
+              containerPort: 9092
+          env:
+            - name: HTTP_PORT
+              value: "8082"
+            - name: METRICS_PORT
+              value: "9092"
+            - name: CORS_ALLOWED_ORIGINS
+              valueFrom:
+                configMapKeyRef:
+                  name: selaras-config
+                  key: CORS_ALLOWED_ORIGINS
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: selaras-secrets
+                  key: JWT_SECRET
+            - name: B2B_API_KEY_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: selaras-secrets
+                  key: B2B_API_KEY_SECRET
+            - name: RATE_LIMIT_RPS
+              valueFrom:
+                configMapKeyRef:
+                  name: selaras-config
+                  key: RATE_LIMIT_RPS
+            - name: RATE_LIMIT_BURST
+              valueFrom:
+                configMapKeyRef:
+                  name: selaras-config
+                  key: RATE_LIMIT_BURST
+            - name: ENABLE_SIGNATURE_CHECK
+              valueFrom:
+                configMapKeyRef:
+                  name: selaras-config
+                  key: ENABLE_SIGNATURE_CHECK
+            - name: AUTH_SERVICE_ADDR
+              valueFrom:
+                configMapKeyRef:
+                  name: selaras-config
+                  key: AUTH_SERVICE_ADDR
+            - name: PATIENT_SERVICE_ADDR
+              valueFrom:
+                configMapKeyRef:
+                  name: selaras-config
+                  key: PATIENT_SERVICE_ADDR
+            - name: PRACTITIONER_SERVICE_ADDR
+              valueFrom:
+                configMapKeyRef:
+                  name: selaras-config
+                  key: PRACTITIONER_SERVICE_ADDR
+            - name: ADMISSION_SERVICE_ADDR
+              valueFrom:
+                configMapKeyRef:
+                  name: selaras-config
+                  key: ADMISSION_SERVICE_ADDR
+            - name: BED_SERVICE_ADDR
+              valueFrom:
+                configMapKeyRef:
+                  name: selaras-config
+                  key: BED_SERVICE_ADDR
+            - name: MASTER_SERVICE_ADDR
+              valueFrom:
+                configMapKeyRef:
+                  name: selaras-config
+                  key: MASTER_SERVICE_ADDR
+            - name: EMR_SERVICE_ADDR
+              valueFrom:
+                configMapKeyRef:
+                  name: selaras-config
+                  key: EMR_SERVICE_ADDR
+            - name: BILLING_SERVICE_ADDR
+              valueFrom:
+                configMapKeyRef:
+                  name: selaras-config
+                  key: BILLING_SERVICE_ADDR
+            - name: PHARMACY_SERVICE_ADDR
+              valueFrom:
+                configMapKeyRef:
+                  name: selaras-config
+                  key: PHARMACY_SERVICE_ADDR
+            - name: LABORATORY_SERVICE_ADDR
+              valueFrom:
+                configMapKeyRef:
+                  name: selaras-config
+                  key: LABORATORY_SERVICE_ADDR
+            - name: RADIOLOGY_SERVICE_ADDR
+              valueFrom:
+                configMapKeyRef:
+                  name: selaras-config
+                  key: RADIOLOGY_SERVICE_ADDR
+            - name: DOCUMENT_SERVICE_ADDR
+              valueFrom:
+                configMapKeyRef:
+                  name: selaras-config
+                  key: DOCUMENT_SERVICE_ADDR
+          resources:
+            requests:
+              cpu: 150m
+              memory: 256Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8082
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8082
+            initialDelaySeconds: 5
+            periodSeconds: 5

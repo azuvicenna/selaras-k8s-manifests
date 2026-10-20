@@ -1,0 +1,72 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: selaras-config
+  namespace: selaras
+  labels:
+    app.kubernetes.io/part-of: selaras-simrs
+data:
+  # Database & Infrastructure Hosts
+  DB_HOST: "postgres.selaras.svc.cluster.local"
+  DB_PORT: "5432"
+  DB_SSLMODE: "disable"
+  REDIS_ADDR: "redis.selaras.svc.cluster.local:6379"
+
+  # MinIO Object Storage
+  STORAGE_ENDPOINT: "minio.selaras.svc.cluster.local:9000"
+  STORAGE_BUCKET_PATIENT: "patient-documents"
+  STORAGE_BUCKET_EMR: "emr-documents"
+  STORAGE_BUCKET_DOCUMENT: "medical-documents"
+  STORAGE_USE_SSL: "false"
+
+  # RabbitMQ Broker URLs & Exchangers
+  RABBITMQ_HOST: "rabbitmq.selaras.svc.cluster.local"
+  RABBITMQ_PORT: "5672"
+  RABBITMQ_NOTIFICATION_EXCHANGE: "notification.exchange"
+  RABBITMQ_BPJS_EXCHANGE: "bpjs.exchange"
+  RABBITMQ_SATUSEHAT_EXCHANGE: "satusehat.exchange"
+
+  # Internal gRPC Microservice Addresses
+  AUTH_SERVICE_ADDR: "auth-service.selaras.svc.cluster.local:50057"
+  PATIENT_SERVICE_ADDR: "patient-service.selaras.svc.cluster.local:50051"
+  EMR_SERVICE_ADDR: "emr-service.selaras.svc.cluster.local:50052"
+  MASTER_SERVICE_ADDR: "master-service.selaras.svc.cluster.local:50053"
+  BED_SERVICE_ADDR: "bed-service.selaras.svc.cluster.local:50054"
+  ADMISSION_SERVICE_ADDR: "admission-service.selaras.svc.cluster.local:50055"
+  PRACTITIONER_SERVICE_ADDR: "practitioner-service.selaras.svc.cluster.local:50056"
+  BILLING_SERVICE_ADDR: "billing-service.selaras.svc.cluster.local:50058"
+  PHARMACY_SERVICE_ADDR: "pharmacy-service.selaras.svc.cluster.local:50059"
+  LABORATORY_SERVICE_ADDR: "laboratory-service.selaras.svc.cluster.local:50060"
+  RADIOLOGY_SERVICE_ADDR: "radiology-service.selaras.svc.cluster.local:50061"
+  DOCUMENT_SERVICE_ADDR: "document-service.selaras.svc.cluster.local:50062"
+
+  # Worker Configuration
+  SATUSEHAT_AUTH_URL: "https://api-satusehat-stg.dto.kemkes.go.id/oauth2/v1"
+  SATUSEHAT_BASE_URL: "https://api-satusehat-stg.dto.kemkes.go.id/fhir-r4/v1"
+  SATUSEHAT_ORG_ID: "10000004"
+  SATUSEHAT_QUEUE: "satusehat.sync"
+  SATUSEHAT_ROUTING_KEY: "satusehat.sync.#"
+  SATUSEHAT_DLQ: "satusehat.sync.dlq"
+
+  BPJS_VCLAIM_BASE_URL: "https://apijkn-dev.bpjs-kesehatan.go.id/vclaim-rest-dev"
+  BPJS_ANTREAN_BASE_URL: "https://apijkn-dev.bpjs-kesehatan.go.id/antreanrs_dev"
+  BPJS_APLICARES_BASE_URL: "https://apijkn-dev.bpjs-kesehatan.go.id/aplicaresws"
+  BPJS_KODE_PPK: "0115R001"
+  BPJS_QUEUE: "bpjs.sync"
+  BPJS_ROUTING_KEY: "bpjs.#"
+  BPJS_DLQ: "bpjs.sync.dlq"
+
+  NOTIFICATION_QUEUE: "notification.send"
+  NOTIFICATION_ROUTING_KEY: "notification.#"
+  NOTIFICATION_DLQ: "notification.send.dlq"
+  WHATSAPP_PROVIDER: "mock"
+  EMAIL_PROVIDER: "mock"
+
+  # Gateway Configuration
+  CORS_ALLOWED_ORIGINS: "*"
+  RATE_LIMIT_RPS: "100"
+  RATE_LIMIT_BURST: "200"
+  ENABLE_SIGNATURE_CHECK: "false"
+  MIN_APP_VERSION: "1.0.0"
+  APP_UPDATE_URL: "https://play.google.com/store/apps/details?id=com.selaras.mobile"
+  VERIFY_BASE_URL: "https://selaras.hospital.id/verify"

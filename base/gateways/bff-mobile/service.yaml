@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: bff-mobile
+  namespace: selaras
+  labels:
+    app.kubernetes.io/name: bff-mobile
+    app.kubernetes.io/component: gateway
+    app.kubernetes.io/part-of: selaras-simrs
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8081
+      targetPort: 8081
+    - name: metrics
+      port: 9091
+      targetPort: 9091
+  selector:
+    app.kubernetes.io/name: bff-mobile

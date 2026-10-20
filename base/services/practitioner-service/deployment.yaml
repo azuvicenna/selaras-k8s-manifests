@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: practitioner-service
+  namespace: selaras
+  labels:
+    app.kubernetes.io/name: practitioner-service
+    app.kubernetes.io/component: microservice
+    app.kubernetes.io/part-of: selaras-simrs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: practitioner-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: practitioner-service
+        app.kubernetes.io/component: microservice
+        app.kubernetes.io/part-of: selaras-simrs
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9097"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: practitioner-service
+          image: azuvicenna/selaras-practitioner-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: grpc
+              containerPort: 50056
+            - name: metrics
+              containerPort: 9097
+          env:
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: selaras-config
+                  key: DB_HOST
+            - name: DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: selaras-config
+                  key: DB_PORT
+            - name: DB_USER
+              value: "practitioner"
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: selaras-secrets
+                  key: DB_PASSWORD_PRACTITIONER
+            - name: DB_NAME
+              value: "practitioner_db"
+            - name: GRPC_PORT
+              value: "50056"
+            - name: METRICS_PORT
+              value: "9097"
+            - name: MASTER_SERVICE_ADDR
+              valueFrom:
+                configMapKeyRef:
+                  name: selaras-config
+                  key: MASTER_SERVICE_ADDR
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          livenessProbe:
+            tcpSocket:
+              port: 50056
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            tcpSocket:
+              port: 50056
+            initialDelaySeconds: 5
+            periodSeconds: 5

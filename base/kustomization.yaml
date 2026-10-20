@@ -1,0 +1,84 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: selaras
+
+resources:
+  # 1. Namespace
+  - namespace/namespace.yaml
+
+  # 2. Configs & Secrets
+  - configs/configmap.yaml
+  - configs/secret.yaml
+
+  # 3. Infrastructure
+  - infrastructure/postgres/init-db-configmap.yaml
+  - infrastructure/postgres/pvc.yaml
+  - infrastructure/postgres/statefulset.yaml
+  - infrastructure/postgres/service.yaml
+  - infrastructure/redis/deployment.yaml
+  - infrastructure/redis/service.yaml
+  - infrastructure/minio/pvc.yaml
+  - infrastructure/minio/deployment.yaml
+  - infrastructure/minio/service.yaml
+  - infrastructure/minio/bucket-init-job.yaml
+  - infrastructure/rabbitmq/pvc.yaml
+  - infrastructure/rabbitmq/statefulset.yaml
+  - infrastructure/rabbitmq/service.yaml
+  - infrastructure/migrator/migration-job.yaml
+
+  # 4. Core Microservices
+  - services/auth-service/deployment.yaml
+  - services/auth-service/service.yaml
+  - services/patient-service/deployment.yaml
+  - services/patient-service/service.yaml
+  - services/emr-service/deployment.yaml
+  - services/emr-service/service.yaml
+  - services/master-service/deployment.yaml
+  - services/master-service/service.yaml
+  - services/bed-service/deployment.yaml
+  - services/bed-service/service.yaml
+  - services/admission-service/deployment.yaml
+  - services/admission-service/service.yaml
+  - services/practitioner-service/deployment.yaml
+  - services/practitioner-service/service.yaml
+  - services/billing-service/deployment.yaml
+  - services/billing-service/service.yaml
+  - services/pharmacy-service/deployment.yaml
+  - services/pharmacy-service/service.yaml
+  - services/laboratory-service/deployment.yaml
+  - services/laboratory-service/service.yaml
+  - services/radiology-service/deployment.yaml
+  - services/radiology-service/service.yaml
+  - services/document-service/deployment.yaml
+  - services/document-service/service.yaml
+
+  # 5. Gateways & BFF
+  - gateways/bff-web/deployment.yaml
+  - gateways/bff-web/service.yaml
+  - gateways/bff-web/hpa.yaml
+  - gateways/bff-mobile/deployment.yaml
+  - gateways/bff-mobile/service.yaml
+  - gateways/bff-mobile/hpa.yaml
+  - gateways/b2b-gateway/deployment.yaml
+  - gateways/b2b-gateway/service.yaml
+  - gateways/b2b-gateway/hpa.yaml
+
+  # 6. Asynchronous Workers
+  - workers/satusehat-worker/deployment.yaml
+  - workers/satusehat-worker/service.yaml
+  - workers/bpjs-worker/deployment.yaml
+  - workers/bpjs-worker/service.yaml
+  - workers/notification-worker/deployment.yaml
+  - workers/notification-worker/service.yaml
+
+  # 7. Ingress
+  - ingress/ingress.yaml
+
+  # 8. Monitoring & Observability
+  - monitoring/prometheus/rbac.yaml
+  - monitoring/prometheus/configmap.yaml
+  - monitoring/prometheus/deployment.yaml
+  - monitoring/prometheus/service.yaml
+  - monitoring/grafana/deployment.yaml
+  - monitoring/grafana/service.yaml

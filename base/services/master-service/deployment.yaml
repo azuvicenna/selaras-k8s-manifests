@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: master-service
+  namespace: selaras
+  labels:
+    app.kubernetes.io/name: master-service
+    app.kubernetes.io/component: microservice
+    app.kubernetes.io/part-of: selaras-simrs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: master-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: master-service
+        app.kubernetes.io/component: microservice
+        app.kubernetes.io/part-of: selaras-simrs
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9094"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: master-service
+          image: azuvicenna/selaras-master-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: grpc
+              containerPort: 50053
+            - name: metrics
+              containerPort: 9094
+          env:
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: selaras-config
+                  key: DB_HOST
+            - name: DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: selaras-config
+                  key: DB_PORT
+            - name: DB_USER
+              value: "master"
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: selaras-secrets
+                  key: DB_PASSWORD_MASTER
+            - name: DB_NAME
+              value: "master_db"
+            - name: GRPC_PORT
+              value: "50053"
+            - name: METRICS_PORT
+              value: "9094"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          livenessProbe:
+            tcpSocket:
+              port: 50053
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            tcpSocket:
+              port: 50053
+            initialDelaySeconds: 5
+            periodSeconds: 5

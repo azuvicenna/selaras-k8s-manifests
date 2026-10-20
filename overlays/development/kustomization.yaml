@@ -1,0 +1,51 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: selaras-dev
+
+resources:
+  - ../../base
+
+patches:
+  # Downscale gateways for local development (1 replica)
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: bff-web
+      spec:
+        replicas: 1
+    target:
+      kind: Deployment
+      name: bff-web
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: bff-mobile
+      spec:
+        replicas: 1
+    target:
+      kind: Deployment
+      name: bff-mobile
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: b2b-gateway
+      spec:
+        replicas: 1
+    target:
+      kind: Deployment
+      name: b2b-gateway
+  - patch: |-
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: selaras-config
+      data:
+        WHATSAPP_PROVIDER: "mock"
+        EMAIL_PROVIDER: "mock"
+    target:
+      kind: ConfigMap
+      name: selaras-config

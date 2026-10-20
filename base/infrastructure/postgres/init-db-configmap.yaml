@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init-script
+  namespace: selaras
+  labels:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/part-of: selaras-simrs
+data:
+  init-multi-postgres.sh: |
+    #!/bin/bash
+    set -e
+    set -u
+
+    function create_user_and_database() {
+        local database=$1
+        local user=$2
+        local password=$3
+        echo "Creating user '$user' and database '$database'..."
+        psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+            DO \$\$
+            BEGIN
+                IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = '$user') THEN
+                    CREATE USER $user WITH PASSWORD '$password';
+                END IF;
+            END
+            \$\$;
+            SELECT 'CREATE DATABASE $database OWNER $user'
+            WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '$database')\gexec
+            GRANT ALL PRIVILEGES ON DATABASE $database TO $user;
+            \c $database
+            GRANT ALL ON SCHEMA public TO $user;
+    EOSQL
+    }
+
+    if [ -n "${POSTGRES_MULTIPLE_DATABASES:-}" ]; then
+        echo "Multiple database creation requested: $POSTGRES_MULTIPLE_DATABASES"
+        for db_spec in $(echo $POSTGRES_MULTIPLE_DATABASES | tr ',' ' '); do
+            db=$(echo $db_spec | cut -d: -f1)
+            user=$(echo $db_spec | cut -d: -f2)
+            pass=$(echo $db_spec | cut -d: -f3)
+            create_user_and_database "$db" "$user" "$pass"
+        done
+        echo "All databases and users created successfully!"
+    fi

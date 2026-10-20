@@ -1,0 +1,52 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: selaras-migration-runner
+  namespace: selaras
+  labels:
+    app.kubernetes.io/name: migration-runner
+    app.kubernetes.io/component: migration
+    app.kubernetes.io/part-of: selaras-simrs
+spec:
+  backoffLimit: 5
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: migration-runner
+    spec:
+      restartPolicy: OnFailure
+      initContainers:
+        - name: wait-for-postgres
+          image: postgres:18-alpine
+          command:
+            - /bin/sh
+            - -c
+            - |
+              until pg_isready -h postgres.selaras.svc.cluster.local -p 5432 -U postgres; do
+                echo "Waiting for postgres to become ready..."
+                sleep 2
+              done
+              echo "Postgres is ready!"
+      containers:
+        - name: migrator
+          image: azuvicenna/selaras-migrator:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: DB_HOST
+              value: "postgres.selaras.svc.cluster.local"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_SSLMODE
+              value: "disable"
+          args:
+            - "-action=up"
+            - "-db-host=postgres.selaras.svc.cluster.local"
+            - "-db-port=5432"
+            - "-service=all"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi

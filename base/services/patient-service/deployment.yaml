@@ -1,0 +1,97 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: patient-service
+  namespace: selaras
+  labels:
+    app.kubernetes.io/name: patient-service
+    app.kubernetes.io/component: microservice
+    app.kubernetes.io/part-of: selaras-simrs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: patient-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: patient-service
+        app.kubernetes.io/component: microservice
+        app.kubernetes.io/part-of: selaras-simrs
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9092"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: patient-service
+          image: azuvicenna/selaras-patient-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: grpc
+              containerPort: 50051
+            - name: metrics
+              containerPort: 9092
+          env:
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: selaras-config
+                  key: DB_HOST
+            - name: DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: selaras-config
+                  key: DB_PORT
+            - name: DB_USER
+              value: "patient"
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: selaras-secrets
+                  key: DB_PASSWORD_PATIENT
+            - name: DB_NAME
+              value: "patient_db"
+            - name: GRPC_PORT
+              value: "50051"
+            - name: METRICS_PORT
+              value: "9092"
+            - name: STORAGE_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  name: selaras-config
+                  key: STORAGE_ENDPOINT
+            - name: STORAGE_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: selaras-secrets
+                  key: MINIO_ROOT_USER
+            - name: STORAGE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: selaras-secrets
+                  key: MINIO_ROOT_PASSWORD
+            - name: STORAGE_BUCKET
+              valueFrom:
+                configMapKeyRef:
+                  name: selaras-config
+                  key: STORAGE_BUCKET_PATIENT
+            - name: STORAGE_USE_SSL
+              value: "false"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          livenessProbe:
+            tcpSocket:
+              port: 50051
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            tcpSocket:
+              port: 50051
+            initialDelaySeconds: 5
+            periodSeconds: 5

@@ -1,0 +1,104 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: selaras
+
+resources:
+  - ../../base
+
+patches:
+  # Enable TLS with Cert-Manager on Ingress
+  - patch: |-
+      apiVersion: networking.k8s.io/v1
+      kind: Ingress
+      metadata:
+        name: selaras-ingress
+        annotations:
+          cert-manager.io/cluster-issuer: letsencrypt-prod
+          nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      spec:
+        tls:
+          - hosts:
+              - api.selaras.hospital.id
+              - mobile-api.selaras.hospital.id
+              - b2b.selaras.hospital.id
+              - storage.selaras.hospital.id
+              - minio-console.selaras.hospital.id
+              - rabbitmq.selaras.hospital.id
+              - grafana.selaras.hospital.id
+            secretName: selaras-tls-cert
+    target:
+      kind: Ingress
+      name: selaras-ingress
+
+  # Scale up core clinical microservices for High Availability (2 replicas)
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: emr-service
+      spec:
+        replicas: 2
+    target:
+      kind: Deployment
+      name: emr-service
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: patient-service
+      spec:
+        replicas: 2
+    target:
+      kind: Deployment
+      name: patient-service
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: admission-service
+      spec:
+        replicas: 2
+    target:
+      kind: Deployment
+      name: admission-service
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: billing-service
+      spec:
+        replicas: 2
+    target:
+      kind: Deployment
+      name: billing-service
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: pharmacy-service
+      spec:
+        replicas: 2
+    target:
+      kind: Deployment
+      name: pharmacy-service
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: satusehat-worker
+      spec:
+        replicas: 2
+    target:
+      kind: Deployment
+      name: satusehat-worker
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: bpjs-worker
+      spec:
+        replicas: 2
+    target:
+      kind: Deployment
+      name: bpjs-worker
